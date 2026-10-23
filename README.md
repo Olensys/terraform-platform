@@ -16,6 +16,10 @@ Catalog, conventions and tooling for the Olensys Terraform/OpenTofu module libra
 | `scripts/consumers.sh [module]` | Find consumers of a module under `$WORKSPACE` (default `$HOME/workspace`) |
 | `scripts/catalog.py --write\|--check` | Regenerate or verify the table below |
 
+## Setup
+
+All repositories in this library are public and Apache-2.0 licensed. The nightly `catalog` workflow uses the default `GITHUB_TOKEN`; enable "Allow GitHub Actions to create and approve pull requests" in this repo's Actions settings so it can open the refresh PR. `catalog.py` exits 2 if it cannot reach this repo.
+
 ## Catalog
 
 <!-- BEGIN_CATALOG -->

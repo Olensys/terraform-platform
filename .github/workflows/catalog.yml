@@ -13,8 +13,10 @@ jobs:
   refresh:
     runs-on: ubuntu-latest
     env:
-      # Needs read access to the private module repos (fine-grained PAT or GitHub App token).
-      GH_TOKEN: ${{ secrets.CATALOG_TOKEN }}
+      # The default GITHUB_TOKEN is enough: module repos are public (read) and the job
+      # has contents/pull-requests write on this repo. The repo setting
+      # "Allow GitHub Actions to create and approve pull requests" must be enabled.
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
       - name: Regenerate catalog

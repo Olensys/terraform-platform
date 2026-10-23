@@ -8,8 +8,9 @@ Variables are declared in `variables.tf` in this order:
 
 1. `name` - the resource name. Optional when `context` is enough to derive one.
 2. `context` - the shared naming and tagging object (below).
-3. Module-specific variables, grouped by concern, required ones first.
-4. `tags` (AWS, Cloudflare) or `labels` (Google) - caller-supplied extras merged over the context-derived set.
+3. `project_id` - Google modules only: it comes first after `context`.
+4. Module-specific variables, grouped by concern, required ones first.
+5. `tags` (AWS, Cloudflare) or `labels` (Google) - caller-supplied extras merged over the context-derived set.
 
 ## The `context` object
 
@@ -60,12 +61,15 @@ A module that wraps an upstream registry module exposes at most **15 inputs** be
 
 ## Secure defaults
 
-Unless a caller opts out explicitly, modules ship with:
+Every module ships with these defaults; a caller must opt out explicitly:
 
-- Encryption at rest enabled (provider-managed keys at minimum; a CMK input where the service supports it).
-- Encryption in transit enforced (TLS only, minimum TLS 1.2).
-- No public access: public access blocks on, no `0.0.0.0/0` ingress, no public IPs.
-- Least-privilege IAM: no wildcard actions or resources in generated policies.
-- Logging and audit trails enabled where the service offers them.
-- Deletion protection or versioning on stateful resources in `prod`.
-- Required tags or labels always applied from `context`.
+- Public access blocked.
+- Encryption on (at rest).
+- TLS enforced (in transit).
+- Immutable image tags.
+- Log retention set.
+- No `authorization_type = "NONE"`.
+- No IAM statements with `resources = ["*"]`.
+- Partition and region always come from data sources, never hardcoded.
+
+Recommended (not enforced): least-privilege IAM, deletion protection or versioning on stateful `prod` resources, and logging/audit trails wherever the service offers them. Public-facing modules (`alb`, `https-lb`, `static-site`) expose public endpoints by design; the rule applies to storage and data-plane resources behind them.

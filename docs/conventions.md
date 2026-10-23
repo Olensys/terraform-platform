@@ -26,7 +26,7 @@ The primary resource is named `this` (`aws_s3_bucket.this`). Multiple resources 
 ```yaml
 name: <repo name>
 cloud: aws | google | common
-tier: primitive | capability | blueprint
+tier: platform | primitive | capability | blueprint
 maturity: experimental | stable | deprecated
 description: <one line>
 owners: [platform]
@@ -39,7 +39,7 @@ deprecated: null | { removal: YYYY-MM-DD, replacement: <repo> }
 ## Commits and releases
 
 - Commits follow Conventional Commits: `feat:`, `fix:`, `docs:`, `chore:`, with `!` or a `BREAKING CHANGE:` footer for breaking changes.
-- Releases are cut from `main` by the shared release workflow: commit types determine the semver bump and a `vX.Y.Z` tag plus GitHub release are created.
+- Releases use release-please: conventional commits drive the version bump and a release PR; merging it creates the `vX.Y.Z` tag and GitHub release.
 - Consumers pin by tag: `source = "git::https://github.com/Olensys/<module>.git?ref=vX.Y.Z"`.
 
 ## Deprecation policy

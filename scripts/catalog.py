@@ -7,6 +7,7 @@ Usage:
 
 Requires only the Python 3 standard library and an authenticated `gh` on PATH.
 Repos that do not exist yet (404) are rendered with maturity "planned".
+Exit codes: 0 ok, 1 README out of date (--check), 2 network/tool/auth error.
 """
 import argparse
 import re
@@ -62,7 +63,7 @@ def gh_api(endpoint, raw=False):
     try:
         p = subprocess.run(cmd, capture_output=True, text=True)
     except FileNotFoundError:
-        sys.exit("error: gh CLI not found on PATH")
+        print("error: gh CLI not found on PATH", file=sys.stderr); sys.exit(2)
     if p.returncode == 0:
         return "ok", p.stdout
     err = p.stderr + p.stdout
@@ -108,7 +109,7 @@ def render(repos):
 
 def splice(readme, table):
     if BEGIN not in readme or END not in readme:
-        sys.exit(f"error: README.md is missing {BEGIN} / {END} markers")
+        print(f"error: README.md is missing {BEGIN} / {END} markers", file=sys.stderr); sys.exit(2)
     head, rest = readme.split(BEGIN, 1)
     _, tail = rest.split(END, 1)
     return f"{head}{BEGIN}\n{table}\n{END}{tail}"
@@ -123,11 +124,16 @@ def main():
 
     repos = parse_catalog(ROOT / "catalog" / "catalog.yaml")
     if not repos:
-        sys.exit("error: no repos found in catalog/catalog.yaml")
+        print("error: no repos found in catalog/catalog.yaml", file=sys.stderr); sys.exit(2)
     try:
+        # A bad or missing token can make repos return 404; make sure we can see our own repo.
+        if gh_api(f"repos/{ORG}/terraform-platform")[0] != "ok":
+            print(f"error: {ORG}/terraform-platform is not reachable with this token; refusing to render", file=sys.stderr)
+            return 2
         table = render(repos)
     except RuntimeError as e:
-        sys.exit(f"error: {e}")
+        print(f"error: {e}", file=sys.stderr)
+        return 2
     readme_path = ROOT / "README.md"
     current = readme_path.read_text()
     updated = splice(current, table)

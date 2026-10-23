@@ -12,7 +12,7 @@ name=$1; cloud=$2; description=$3
 case "$cloud" in aws|google|common) ;; *) echo "cloud must be aws, google or common" >&2; exit 2 ;; esac
 case "$description" in *"|"*|*"&"*|*"/"*) echo "description must not contain | & or /" >&2; exit 2 ;; esac
 
-gh repo create "Olensys/$name" --private --template Olensys/terraform-module-template \
+gh repo create "Olensys/$name" --public --template Olensys/terraform-module-template \
   --description "$description" --clone
 gh repo edit "Olensys/$name" --add-topic terraform-module
 cd "$name"
