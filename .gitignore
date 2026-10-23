@@ -1,0 +1,5 @@
+.superpowers/
+docs/superpowers/
+.terraform/
+*.tfstate*
+.DS_Store

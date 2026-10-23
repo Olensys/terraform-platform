@@ -1,0 +1,10 @@
+name: terraform-platform
+cloud: common
+tier: platform
+maturity: stable
+description: Catalog, conventions and tooling for the Olensys module library
+owners: [platform]
+upstream: null
+pairs_with: null
+registry_name: terraform-platform
+deprecated: null

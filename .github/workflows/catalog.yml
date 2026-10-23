@@ -1,0 +1,38 @@
+name: catalog
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    env:
+      # Needs read access to the private module repos (fine-grained PAT or GitHub App token).
+      GH_TOKEN: ${{ secrets.CATALOG_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Regenerate catalog
+        run: python3 scripts/catalog.py --write
+      - name: Open PR if README changed
+        run: |
+          if git diff --quiet -- README.md; then
+            echo "catalog up to date"
+            exit 0
+          fi
+          branch="chore/catalog-refresh"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$branch"
+          git add README.md
+          git commit -m "chore: refresh module catalog"
+          git push --force origin "$branch"
+          gh pr create --base main --head "$branch" \
+            --title "chore: refresh module catalog" \
+            --body "Automated refresh of the catalog table." \
+            || gh pr edit "$branch" --body "Automated refresh of the catalog table."
