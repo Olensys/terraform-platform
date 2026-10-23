@@ -5,6 +5,7 @@ Catalog, conventions and tooling for the Olensys Terraform/OpenTofu module libra
 - [Interface contract](docs/interface.md)
 - [Conventions](docs/conventions.md)
 - [AWS and Google pairs](docs/pairs.md)
+- [Adopting the module library](docs/migration.md)
 - [Proposals](docs/proposals/README.md)
 
 ## Scripts
@@ -26,40 +27,40 @@ All repositories in this library are public and Apache-2.0 licensed. The nightly
 | Module | Cloud | Tier | Maturity | Description | Pairs with | Latest tag |
 |---|---|---|---|---|---|---|
 | [`terraform-platform`](https://github.com/Olensys/terraform-platform) | common | platform | stable | Catalog, conventions and tooling for the Olensys module library |  | - |
-| `terraform-workflows` | common | platform | planned |  |  | - |
-| `terraform-module-template` | common | platform | planned |  |  | - |
-| `terraform-null-naming` | common | capability | planned |  |  | - |
-| `terraform-cloudflare-dns` | common | capability | planned |  |  | - |
-| `terraform-aws-s3-bucket` | aws | capability | planned |  |  | - |
-| `terraform-aws-ecs-cluster` | aws | capability | planned |  |  | - |
-| `terraform-aws-ecs-service` | aws | capability | planned |  |  | - |
-| `terraform-aws-lambda-function` | aws | capability | planned |  |  | - |
-| `terraform-aws-ssm-parameters` | aws | capability | planned |  |  | - |
-| `terraform-aws-ecr-repository` | aws | capability | planned |  |  | - |
-| `terraform-aws-sqs-queue` | aws | capability | planned |  |  | - |
-| `terraform-aws-acm-certificate` | aws | capability | planned |  |  | - |
-| `terraform-aws-static-site` | aws | capability | planned |  |  | - |
-| `terraform-aws-alb` | aws | capability | planned |  |  | - |
-| `terraform-aws-vpc` | aws | capability | planned |  |  | - |
-| `terraform-aws-github-oidc-role` | aws | capability | planned |  |  | - |
-| `terraform-aws-cognito-user-pool` | aws | capability | planned |  |  | - |
-| `terraform-aws-ses-domain` | aws | capability | planned |  |  | - |
-| `terraform-aws-step-function` | aws | capability | planned |  |  | - |
-| `terraform-aws-http-api` | aws | capability | planned |  |  | - |
-| `terraform-google-network` | google | capability | planned |  |  | - |
-| `terraform-google-gke-cluster` | google | capability | planned |  |  | - |
-| `terraform-google-service-account` | google | capability | planned |  |  | - |
-| `terraform-google-github-workload-identity` | google | capability | planned |  |  | - |
-| `terraform-google-gcs-bucket` | google | capability | planned |  |  | - |
-| `terraform-google-artifact-registry` | google | capability | planned |  |  | - |
-| `terraform-google-secret-manager` | google | capability | planned |  |  | - |
-| `terraform-google-cloud-sql` | google | capability | planned |  |  | - |
-| `terraform-google-memorystore-redis` | google | capability | planned |  |  | - |
-| `terraform-google-cloud-run-service` | google | capability | planned |  |  | - |
-| `terraform-google-cloud-function` | google | capability | planned |  |  | - |
-| `terraform-google-https-lb` | google | capability | planned |  |  | - |
-| `terraform-google-cloud-armor` | google | capability | planned |  |  | - |
-| `terraform-google-log-export` | google | capability | planned |  |  | - |
-| `terraform-google-identity-platform` | google | capability | planned |  |  | - |
-| `terraform-google-bastion-host` | google | capability | planned |  |  | - |
+| `terraform-workflows` | common | platform | unknown |  |  | - |
+| [`terraform-module-template`](https://github.com/Olensys/terraform-module-template) | __CLOUD__ | capability | experimental | __DESCRIPTION__ |  | - |
+| [`terraform-null-naming`](https://github.com/Olensys/terraform-null-naming) | common | capability | experimental | Renders a context object into resource names, AWS tags and GCP labels |  | v1.0.1 |
+| [`terraform-cloudflare-dns`](https://github.com/Olensys/terraform-cloudflare-dns) | common | capability | experimental | Cloudflare DNS records from a map; used for ACM and SES validation and CNAMEs |  | v1.0.1 |
+| [`terraform-aws-s3-bucket`](https://github.com/Olensys/terraform-aws-s3-bucket) | aws | capability | experimental | Private, encrypted, TLS-only S3 bucket with optional versioning, lifecycle and CORS | `terraform-google-gcs-bucket` | v1.0.1 |
+| [`terraform-aws-ecs-cluster`](https://github.com/Olensys/terraform-aws-ecs-cluster) | aws | capability | experimental | ECS cluster on Fargate with Container Insights and capacity provider strategy | `terraform-google-gke-cluster` | v1.0.1 |
+| [`terraform-aws-ecs-service`](https://github.com/Olensys/terraform-aws-ecs-service) | aws | capability | experimental | Fargate ECS service with task definition, container definitions, scoped IAM, optional ALB ingress, autoscaling and alarms | `terraform-google-cloud-run-service` | v1.0.1 |
+| [`terraform-aws-lambda-function`](https://github.com/Olensys/terraform-aws-lambda-function) | aws | capability | experimental | Lambda function with scoped IAM, log retention, tracing, optional schedule, event sources and SSM-sourced environment | `terraform-google-cloud-function` | v1.0.1 |
+| [`terraform-aws-ssm-parameters`](https://github.com/Olensys/terraform-aws-ssm-parameters) | aws | capability | experimental | SSM Parameter Store parameters under an environment-scoped path, SecureString by default | `terraform-google-secret-manager` | v1.0.1 |
+| [`terraform-aws-ecr-repository`](https://github.com/Olensys/terraform-aws-ecr-repository) | aws | capability | experimental | ECR repository with immutable tags, scan on push and a lifecycle policy that keeps the last N images | `terraform-google-artifact-registry` | v1.0.1 |
+| [`terraform-aws-sqs-queue`](https://github.com/Olensys/terraform-aws-sqs-queue) | aws | capability | experimental | SQS queue with a dead-letter queue by default, server-side encryption always on, optional FIFO |  | v1.0.1 |
+| [`terraform-aws-acm-certificate`](https://github.com/Olensys/terraform-aws-acm-certificate) | aws | capability | experimental | ACM certificate with Route53 or external DNS validation, EC P-256 key, create-before-destroy |  | v1.0.1 |
+| [`terraform-aws-static-site`](https://github.com/Olensys/terraform-aws-static-site) | aws | capability | experimental | Static website on CloudFront with a private S3 origin behind Origin Access Control, HTTPS-only, SPA fallback | `terraform-google-https-lb` | v1.0.1 |
+| [`terraform-aws-alb`](https://github.com/Olensys/terraform-aws-alb) | aws | capability | experimental | Application Load Balancer with HTTPS-only listeners, HTTP redirect, TLS 1.3 policy and a managed security group | `terraform-google-https-lb` | v1.0.1 |
+| [`terraform-aws-vpc`](https://github.com/Olensys/terraform-aws-vpc) | aws | capability | experimental | VPC with public and private subnets across AZs, NAT gateway strategy, DNS and least-privilege flow logs | `terraform-google-network` | v1.0.1 |
+| [`terraform-aws-github-oidc-role`](https://github.com/Olensys/terraform-aws-github-oidc-role) | aws | capability | experimental | IAM role assumable by GitHub Actions through OIDC, scoped to named repositories, environments and branches | `terraform-google-github-workload-identity` | v1.0.1 |
+| [`terraform-aws-cognito-user-pool`](https://github.com/Olensys/terraform-aws-cognito-user-pool) | aws | capability | experimental | Cognito user pool with hardened defaults, app clients, hosted UI domain, federated identity providers and Lambda triggers | `terraform-google-identity-platform` | v1.0.1 |
+| [`terraform-aws-ses-domain`](https://github.com/Olensys/terraform-aws-ses-domain) | aws | capability | experimental | SES domain identity with Easy DKIM, custom MAIL FROM, DMARC guidance, configuration set and event notifications |  | v1.0.1 |
+| [`terraform-aws-step-function`](https://github.com/Olensys/terraform-aws-step-function) | aws | capability | experimental | Step Functions state machine with full logging, X-Ray tracing and an execution role scoped to the Lambda functions it invokes |  | v1.0.0 |
+| [`terraform-aws-http-api`](https://github.com/Olensys/terraform-aws-http-api) | aws | capability | experimental | API Gateway HTTP API with Lambda proxy routes, access logging, throttling, CORS and an optional custom domain |  | v1.0.0 |
+| [`terraform-google-network`](https://github.com/Olensys/terraform-google-network) | google | capability | experimental | VPC network with subnets, flow logs, Cloud NAT, private service access and an optional Serverless VPC Access connector | `terraform-aws-vpc` | v1.0.1 |
+| [`terraform-google-gke-cluster`](https://github.com/Olensys/terraform-google-gke-cluster) | google | capability | experimental | Private GKE cluster with Workload Identity, shielded nodes, release channel and node pools from a map | `terraform-aws-ecs-cluster` | v1.0.0 |
+| [`terraform-google-service-account`](https://github.com/Olensys/terraform-google-service-account) | google | capability | experimental | Service account with project roles, optional GKE Workload Identity binding and impersonation grants; keys forbidden in prod |  | v1.0.0 |
+| [`terraform-google-github-workload-identity`](https://github.com/Olensys/terraform-google-github-workload-identity) | google | capability | experimental | Workload Identity Federation pool and GitHub OIDC provider, restricted to one GitHub organisation, with per-repository service account bindings | `terraform-aws-github-oidc-role` | v1.0.0 |
+| [`terraform-google-gcs-bucket`](https://github.com/Olensys/terraform-google-gcs-bucket) | google | capability | experimental | Cloud Storage bucket with uniform access, public access prevention, optional versioning, lifecycle, CORS and IAM | `terraform-aws-s3-bucket` | v1.0.0 |
+| [`terraform-google-artifact-registry`](https://github.com/Olensys/terraform-google-artifact-registry) | google | capability | experimental | Artifact Registry repository with immutable Docker tags, cleanup policies that keep the last N versions, and reader and writer IAM | `terraform-aws-ecr-repository` | v1.0.1 |
+| [`terraform-google-secret-manager`](https://github.com/Olensys/terraform-google-secret-manager) | google | capability | experimental | Secret Manager secrets from a map with optional initial versions, CMEK and accessor IAM | `terraform-aws-ssm-parameters` | v1.0.1 |
+| [`terraform-google-cloud-sql`](https://github.com/Olensys/terraform-google-cloud-sql) | google | capability | experimental | Cloud SQL instance with private IP only, enforced TLS, backups with PITR, HA in prod and generated passwords stored in Secret Manager |  | v1.0.1 |
+| [`terraform-google-memorystore-redis`](https://github.com/Olensys/terraform-google-memorystore-redis) | google | capability | experimental | Memorystore for Redis Cluster with AUTH and in-transit encryption, a Private Service Connect connection policy, and HA in prod |  | v1.0.1 |
+| [`terraform-google-cloud-run-service`](https://github.com/Olensys/terraform-google-cloud-run-service) | google | capability | experimental | Cloud Run v2 service with a dedicated service account, secret-backed environment, scaling, VPC egress, internal ingress by default and optional Eventarc triggers | `terraform-aws-ecs-service` | v1.0.1 |
+| [`terraform-google-cloud-function`](https://github.com/Olensys/terraform-google-cloud-function) | google | capability | experimental | Cloud Functions gen2 with a dedicated service account, secret-backed environment, HTTP or event triggers, and a versioned source bucket | `terraform-aws-lambda-function` | v1.0.1 |
+| [`terraform-google-https-lb`](https://github.com/Olensys/terraform-google-https-lb) | google | capability | experimental | Global external HTTPS load balancer with managed certificates, HTTP redirect, serverless NEG, NEG and bucket backends, optional CDN and Cloud Armor | `terraform-aws-alb` | v1.0.1 |
+| [`terraform-google-cloud-armor`](https://github.com/Olensys/terraform-google-cloud-armor) | google | capability | experimental | Cloud Armor security policy with OWASP preconfigured rules, IP allow and deny lists, rate limiting and adaptive protection |  | v1.0.0 |
+| [`terraform-google-log-export`](https://github.com/Olensys/terraform-google-log-export) | google | capability | experimental | Project log sink with a filter and exclusions, exporting to a Cloud Logging bucket, Cloud Storage or BigQuery with the writer identity granted |  | v1.0.1 |
+| [`terraform-google-identity-platform`](https://github.com/Olensys/terraform-google-identity-platform) | google | capability | experimental | Identity Platform project configuration with sign-in providers, authorized domains, MFA state and blocking functions | `terraform-aws-cognito-user-pool` | v1.0.0 |
+| [`terraform-google-bastion-host`](https://github.com/Olensys/terraform-google-bastion-host) | google | capability | experimental | Bastion VM with no external IP, IAP-only SSH, OS Login and shielded VM, for named members |  | v1.0.1 |
 <!-- END_CATALOG -->
