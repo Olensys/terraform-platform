@@ -10,6 +10,7 @@
 #   - Names matching ^olensys-shared- for VPC, ECSCluster, ACM, S3, CloudFront and IAM.
 #   - IAM roles: github-integration (the CI OIDC role),
 #     OrganizationAccountAccessRole (the owner's admin path into the account),
+#     AWSReservedSSO_* (IAM Identity Center permission-set roles),
 #     AWSBudgetsActionsRole* (the budget hard-stop) and AWSServiceRole* (service-linked).
 #   - The GitHub OIDC identity provider (token.actions.githubusercontent.com).
 #   - The Terraform state bucket olensys-tf-test-state (S3).
@@ -54,6 +55,7 @@ IAMRoles:
       - '^github-integration$'
       - '^OrganizationAccountAccessRole$'
       - '^AWSBudgetsActionsRole'
+      - '^AWSReservedSSO_'
       - '^AWSServiceRole'
     tags:
       Environment: '^shared$'
