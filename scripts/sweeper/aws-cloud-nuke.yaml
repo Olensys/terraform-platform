@@ -1,0 +1,24 @@
+# cloud-nuke configuration for the weekly sweeper (.github/workflows/sweeper.yml).
+#
+# The AWS account behind SWEEPER_AWS_ACCOUNT_ID is dedicated to integration tests,
+# so everything in it that is older than the --older-than threshold is fair game.
+# The only things protected here are what the sweeper itself depends on:
+#   - the GitHub OIDC role (documented as "olensys-github-integration"),
+#   - the GitHub OIDC identity provider,
+#   - every AWS service-linked role (AWSServiceRole*).
+# Config keys (IAMRoles, IAMServiceLinkedRoles, OIDCProvider) map to the --resource-type values
+# iam-role, iam-service-linked-role, oidc-provider, verified with
+# `cloud-nuke aws --list-resource-types` on v0.53.0.
+IAMRoles:
+  exclude:
+    names_regex:
+      - '^olensys-github-integration$'
+      - '^AWSServiceRole.*$'
+IAMServiceLinkedRoles:
+  exclude:
+    names_regex:
+      - '^AWSServiceRole.*$'
+OIDCProvider:
+  exclude:
+    names_regex:
+      - '.*token\.actions\.githubusercontent\.com.*'
