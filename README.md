@@ -33,7 +33,7 @@ All repositories in this library are public and Apache-2.0 licensed. The nightly
 | [`terraform-platform`](https://github.com/Olensys/terraform-platform) | common | platform | stable | Catalog, conventions and tooling for the Olensys module library |  | - |
 | [`terraform-workflows`](https://github.com/Olensys/terraform-workflows) | common | platform | n/a | Reusable GitHub Actions workflows: module-ci, module-release, module-integration |  | v1 |
 | [`terraform-module-template`](https://github.com/Olensys/terraform-module-template) | common | platform | n/a | Template repository every module repo is created from |  | - |
-| [`terraform-null-naming`](https://github.com/Olensys/terraform-null-naming) | common | capability | experimental | Renders a context object into resource names, AWS tags and GCP labels |  | v1.0.1 |
+| [`terraform-null-naming`](https://github.com/Olensys/terraform-null-naming) | common | capability | stable | Renders a context object into resource names, AWS tags and GCP labels |  | v1.0.1 |
 | [`terraform-cloudflare-dns`](https://github.com/Olensys/terraform-cloudflare-dns) | common | capability | experimental | Cloudflare DNS records from a map; used for ACM and SES validation and CNAMEs |  | v1.0.1 |
 | [`terraform-aws-s3-bucket`](https://github.com/Olensys/terraform-aws-s3-bucket) | aws | capability | stable | Private, encrypted, TLS-only S3 bucket with optional versioning, lifecycle and CORS | `terraform-google-gcs-bucket` | v1.1.2 |
 | [`terraform-aws-ecs-cluster`](https://github.com/Olensys/terraform-aws-ecs-cluster) | aws | capability | stable | ECS cluster on Fargate with Container Insights and capacity provider strategy | `terraform-google-gke-cluster` | v1.0.4 |
