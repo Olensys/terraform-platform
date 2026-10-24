@@ -7,6 +7,8 @@ Catalog, conventions and tooling for the Olensys Terraform/OpenTofu module libra
 - [AWS and Google pairs](docs/pairs.md)
 - [Adopting the module library](docs/migration.md)
 - [Proposals](docs/proposals/README.md)
+- [Runbook: dedicated test project and account with budget caps](docs/runbooks/test-accounts.md)
+- [Contributing](CONTRIBUTING.md)
 
 ## Scripts
 
@@ -16,6 +18,7 @@ Catalog, conventions and tooling for the Olensys Terraform/OpenTofu module libra
 | `scripts/fleet.sh "<pr title>" <script>` | Run a script across every module repo and open PRs (needs `multi-gitter`) |
 | `scripts/consumers.sh [module]` | Find consumers of a module under `$WORKSPACE` (default `$HOME/workspace`) |
 | `scripts/catalog.py --write\|--check` | Regenerate or verify the table below |
+| `scripts/sweeper/` | Weekly leaked-resource sweeper; dry-run by default on manual dispatch. A local dry run against the test project is the owner's job once credentials exist: `bash scripts/sweeper/gcp-sweep.sh <project> true` |
 
 ## Setup
 

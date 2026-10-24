@@ -51,7 +51,7 @@
 ## Maturity and release policy
 
 - Every module starts as `experimental`.
-- A module is promoted to `stable` after two green nightly `integration` runs.
+- A module is promoted to `stable` after two green integration runs on `main` plus one green weekly sweep. Integration applies run on push to `main` that touches Terraform files, weekly on Sunday 03:00 UTC, and on manual dispatch.
 - release-please owns releases after 1.0.1. It now runs in manifest mode, honouring each repo's `release-please-config.json` and `.release-please-manifest.json`, and will take over once the org setting below is enabled.
 - Releases to date were cut manually (tags and GitHub Releases) because the org currently blocks Actions from opening pull requests.
 - (Historical) the 1.0.1 fleet release was cut manually because the org currently blocks Actions from opening pull requests.
@@ -60,3 +60,4 @@
 
 - [ ] Enable "Allow GitHub Actions to create and approve pull requests" at org level.
 - [ ] Set `TF_VAR_*` repository variables and cloud credentials for `integration.yml` in each module repo (names are listed in the terraform-workflows README).
+- [ ] Set the `SWEEPER_AWS_ACCOUNT_ID` and `SWEEPER_GCP_PROJECT_ID` repository variables on terraform-platform, run the `sweeper` workflow once with `dry_run=true` and read the output before trusting it.

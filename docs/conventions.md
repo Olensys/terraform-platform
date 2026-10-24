@@ -42,6 +42,12 @@ deprecated: null | { removal: YYYY-MM-DD, replacement: <repo> }
 - Releases use release-please: conventional commits drive the version bump and a release PR; merging it creates the `vX.Y.Z` tag and GitHub release.
 - Consumers pin by tag: `source = "git::https://github.com/Olensys/<module>.git?ref=vX.Y.Z"`.
 
+## Integration cadence and maturity
+
+- Integration applies run on push to `main` that touches Terraform files, weekly on Sunday 03:00 UTC, and on manual dispatch.
+- The weekly leaked-resource sweeper runs on Sundays at 06:00 UTC (see `scripts/sweeper/`).
+- Maturity promotion: `stable` after two green integration runs on `main` plus one green weekly sweep.
+
 ## Deprecation policy
 
 - Two majors are supported at a time: N and N-1.
