@@ -17,6 +17,7 @@ This repository holds the catalog, conventions and tooling for the Olensys modul
 ## Policy
 
 - Tags are created only by release-please; never create or move a tag by hand. (This is policy, not enforced by a ruleset.)
+- Maintainers: never run `scripts/protect-main.sh` from a checkout that is behind main.
 
 ## Before you open a PR
 
