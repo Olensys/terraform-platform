@@ -1,24 +1,567 @@
 # cloud-nuke configuration for the weekly sweeper (.github/workflows/sweeper.yml).
 #
-# The AWS account behind SWEEPER_AWS_ACCOUNT_ID is dedicated to integration tests,
-# so everything in it that is older than the --older-than threshold is fair game.
-# The only things protected here are what the sweeper itself depends on:
-#   - the GitHub OIDC role (documented as "olensys-github-integration"),
-#   - the GitHub OIDC identity provider,
-#   - every AWS service-linked role (AWSServiceRole*).
-# Config keys (IAMRoles, IAMServiceLinkedRoles, OIDCProvider) map to the --resource-type values
-# iam-role, iam-service-linked-role, oidc-provider, verified with
-# `cloud-nuke aws --list-resource-types` on v0.53.0.
+# The AWS account behind SWEEPER_AWS_ACCOUNT_ID is dedicated to integration tests, so
+# anything older than --older-than is swept EXCEPT the long-lived infrastructure the
+# integration tests depend on. Kept, and why:
+#   - Everything tagged Environment=shared (exact key casing; the value is matched
+#     case-insensitively against ^shared$). The shared VPC, ECS cluster and ACM
+#     certificate are created with context environment = "shared", which yields that
+#     tag and names starting olensys-shared-. Applied to every resource type below.
+#   - Names matching ^olensys-shared- for VPC, ECSCluster, ACM, S3, CloudFront and IAM.
+#   - IAM roles: github-integration (the CI OIDC role),
+#     OrganizationAccountAccessRole (the owner's admin path into the account),
+#     AWSBudgetsActionsRole* (the budget hard-stop) and AWSServiceRole* (service-linked).
+#   - The GitHub OIDC identity provider (token.actions.githubusercontent.com).
+#   - The Terraform state bucket olensys-tf-test-state (S3).
+# Test resources carry environment = "test" / the olensys-test- prefix and are swept.
+# Filter syntax verified against cloud-nuke v0.53.0 config/config.go (exclude.names_regex,
+# exclude.tags). Types that do not expose tags simply ignore the tag filter.
+VPC:
+  exclude:
+    names_regex:
+      - '^olensys-shared-'
+    tags:
+      Environment: '^shared$'
+ECSCluster:
+  exclude:
+    names_regex:
+      - '^olensys-shared-'
+    tags:
+      Environment: '^shared$'
+ACM:
+  exclude:
+    names_regex:
+      - '^olensys-shared-'
+    tags:
+      Environment: '^shared$'
+S3:
+  exclude:
+    names_regex:
+      - '^olensys-shared-'
+      - '^olensys-tf-test-state'
+    tags:
+      Environment: '^shared$'
+CloudFrontDistribution:
+  exclude:
+    names_regex:
+      - '^olensys-shared-'
+    tags:
+      Environment: '^shared$'
 IAMRoles:
   exclude:
     names_regex:
-      - '^olensys-github-integration$'
-      - '^AWSServiceRole.*$'
+      - '^olensys-shared-'
+      - '^github-integration$'
+      - '^OrganizationAccountAccessRole$'
+      - '^AWSBudgetsActionsRole'
+      - '^AWSServiceRole'
+    tags:
+      Environment: '^shared$'
 IAMServiceLinkedRoles:
   exclude:
     names_regex:
-      - '^AWSServiceRole.*$'
+      - '^AWSServiceRole'
 OIDCProvider:
   exclude:
     names_regex:
-      - '.*token\.actions\.githubusercontent\.com.*'
+      - 'token\.actions\.githubusercontent\.com'
+ACMPCA:
+  exclude:
+    tags:
+      Environment: '^shared$'
+AMI:
+  exclude:
+    tags:
+      Environment: '^shared$'
+APIGateway:
+  exclude:
+    tags:
+      Environment: '^shared$'
+APIGatewayV2:
+  exclude:
+    tags:
+      Environment: '^shared$'
+AccessAnalyzer:
+  exclude:
+    tags:
+      Environment: '^shared$'
+AutoScalingGroup:
+  exclude:
+    tags:
+      Environment: '^shared$'
+AppRunnerService:
+  exclude:
+    tags:
+      Environment: '^shared$'
+BackupPlan:
+  exclude:
+    tags:
+      Environment: '^shared$'
+BackupVault:
+  exclude:
+    tags:
+      Environment: '^shared$'
+ManagedPrometheus:
+  exclude:
+    tags:
+      Environment: '^shared$'
+CloudWatchAlarm:
+  exclude:
+    tags:
+      Environment: '^shared$'
+CloudWatchDashboard:
+  exclude:
+    tags:
+      Environment: '^shared$'
+CloudWatchLogGroup:
+  exclude:
+    tags:
+      Environment: '^shared$'
+CloudMapNamespace:
+  exclude:
+    tags:
+      Environment: '^shared$'
+CloudMapService:
+  exclude:
+    tags:
+      Environment: '^shared$'
+CloudTrailTrail:
+  exclude:
+    tags:
+      Environment: '^shared$'
+CloudFormationStack:
+  exclude:
+    tags:
+      Environment: '^shared$'
+CodeDeployApplications:
+  exclude:
+    tags:
+      Environment: '^shared$'
+ConfigServiceRecorder:
+  exclude:
+    tags:
+      Environment: '^shared$'
+ConfigServiceRule:
+  exclude:
+    tags:
+      Environment: '^shared$'
+DataPipeline:
+  exclude:
+    tags:
+      Environment: '^shared$'
+DataSyncLocation:
+  exclude:
+    tags:
+      Environment: '^shared$'
+DataSyncTask:
+  exclude:
+    tags:
+      Environment: '^shared$'
+DBGlobalClusters:
+  exclude:
+    tags:
+      Environment: '^shared$'
+DBClusters:
+  exclude:
+    tags:
+      Environment: '^shared$'
+DBInstances:
+  exclude:
+    tags:
+      Environment: '^shared$'
+DBGlobalClusterMemberships:
+  exclude:
+    tags:
+      Environment: '^shared$'
+DBSubnetGroups:
+  exclude:
+    tags:
+      Environment: '^shared$'
+DynamoDB:
+  exclude:
+    tags:
+      Environment: '^shared$'
+EBSVolume:
+  exclude:
+    tags:
+      Environment: '^shared$'
+ElasticBeanstalk:
+  exclude:
+    tags:
+      Environment: '^shared$'
+EC2:
+  exclude:
+    tags:
+      Environment: '^shared$'
+EC2DedicatedHosts:
+  exclude:
+    tags:
+      Environment: '^shared$'
+EC2DHCPOption:
+  exclude:
+    tags:
+      Environment: '^shared$'
+EC2KeyPairs:
+  exclude:
+    tags:
+      Environment: '^shared$'
+EC2IPAM:
+  exclude:
+    tags:
+      Environment: '^shared$'
+EC2IPAMByoasn:
+  exclude:
+    tags:
+      Environment: '^shared$'
+EC2IPAMCustomAllocation:
+  exclude:
+    tags:
+      Environment: '^shared$'
+EC2IPAMPool:
+  exclude:
+    tags:
+      Environment: '^shared$'
+EC2IPAMResourceDiscovery:
+  exclude:
+    tags:
+      Environment: '^shared$'
+EC2IPAMScope:
+  exclude:
+    tags:
+      Environment: '^shared$'
+EC2Endpoint:
+  exclude:
+    tags:
+      Environment: '^shared$'
+EC2Subnet:
+  exclude:
+    tags:
+      Environment: '^shared$'
+EC2PlacementGroups:
+  exclude:
+    tags:
+      Environment: '^shared$'
+EgressOnlyInternetGateway:
+  exclude:
+    tags:
+      Environment: '^shared$'
+ECRRepository:
+  exclude:
+    tags:
+      Environment: '^shared$'
+ECSService:
+  exclude:
+    tags:
+      Environment: '^shared$'
+EKSCluster:
+  exclude:
+    tags:
+      Environment: '^shared$'
+ELBv1:
+  exclude:
+    tags:
+      Environment: '^shared$'
+ELBv2:
+  exclude:
+    tags:
+      Environment: '^shared$'
+ElasticFileSystem:
+  exclude:
+    tags:
+      Environment: '^shared$'
+ElasticIP:
+  exclude:
+    tags:
+      Environment: '^shared$'
+ElastiCache:
+  exclude:
+    tags:
+      Environment: '^shared$'
+ElastiCacheParameterGroup:
+  exclude:
+    tags:
+      Environment: '^shared$'
+ElastiCacheServerless:
+  exclude:
+    tags:
+      Environment: '^shared$'
+ElastiCacheSubnetGroup:
+  exclude:
+    tags:
+      Environment: '^shared$'
+EventBridge:
+  exclude:
+    tags:
+      Environment: '^shared$'
+EventBridgeArchive:
+  exclude:
+    tags:
+      Environment: '^shared$'
+EventBridgeRule:
+  exclude:
+    tags:
+      Environment: '^shared$'
+EventBridgeSchedule:
+  exclude:
+    tags:
+      Environment: '^shared$'
+EventBridgeScheduleGroup:
+  exclude:
+    tags:
+      Environment: '^shared$'
+Grafana:
+  exclude:
+    tags:
+      Environment: '^shared$'
+GuardDuty:
+  exclude:
+    tags:
+      Environment: '^shared$'
+IAMGroups:
+  exclude:
+    tags:
+      Environment: '^shared$'
+IAMPolicies:
+  exclude:
+    tags:
+      Environment: '^shared$'
+IAMInstanceProfiles:
+  exclude:
+    tags:
+      Environment: '^shared$'
+IAMUsers:
+  exclude:
+    tags:
+      Environment: '^shared$'
+KMSCustomerKeys:
+  exclude:
+    tags:
+      Environment: '^shared$'
+KinesisStream:
+  exclude:
+    tags:
+      Environment: '^shared$'
+KinesisFirehose:
+  exclude:
+    tags:
+      Environment: '^shared$'
+LambdaFunction:
+  exclude:
+    tags:
+      Environment: '^shared$'
+LambdaLayer:
+  exclude:
+    tags:
+      Environment: '^shared$'
+LaunchConfiguration:
+  exclude:
+    tags:
+      Environment: '^shared$'
+LaunchTemplate:
+  exclude:
+    tags:
+      Environment: '^shared$'
+MacieMember:
+  exclude:
+    tags:
+      Environment: '^shared$'
+MSKCluster:
+  exclude:
+    tags:
+      Environment: '^shared$'
+MQBroker:
+  exclude:
+    tags:
+      Environment: '^shared$'
+NATGateway:
+  exclude:
+    tags:
+      Environment: '^shared$'
+OpenSearchDomain:
+  exclude:
+    tags:
+      Environment: '^shared$'
+Redshift:
+  exclude:
+    tags:
+      Environment: '^shared$'
+RedshiftSnapshotCopyGrant:
+  exclude:
+    tags:
+      Environment: '^shared$'
+ResourceShare:
+  exclude:
+    tags:
+      Environment: '^shared$'
+RDSSnapshot:
+  exclude:
+    tags:
+      Environment: '^shared$'
+RDSClusterSnapshot:
+  exclude:
+    tags:
+      Environment: '^shared$'
+RDSParameterGroup:
+  exclude:
+    tags:
+      Environment: '^shared$'
+RDSProxy:
+  exclude:
+    tags:
+      Environment: '^shared$'
+S3AccessPoint:
+  exclude:
+    tags:
+      Environment: '^shared$'
+S3ObjectLambdaAccessPoint:
+  exclude:
+    tags:
+      Environment: '^shared$'
+S3MultiRegionAccessPoint:
+  exclude:
+    tags:
+      Environment: '^shared$'
+SESIdentity:
+  exclude:
+    tags:
+      Environment: '^shared$'
+SESConfigurationSet:
+  exclude:
+    tags:
+      Environment: '^shared$'
+SESReceiptRuleSet:
+  exclude:
+    tags:
+      Environment: '^shared$'
+SESReceiptFilter:
+  exclude:
+    tags:
+      Environment: '^shared$'
+SESEmailTemplates:
+  exclude:
+    tags:
+      Environment: '^shared$'
+SNS:
+  exclude:
+    tags:
+      Environment: '^shared$'
+SQS:
+  exclude:
+    tags:
+      Environment: '^shared$'
+SageMakerEndpoint:
+  exclude:
+    tags:
+      Environment: '^shared$'
+SageMakerEndpointConfig:
+  exclude:
+    tags:
+      Environment: '^shared$'
+SageMakerNotebook:
+  exclude:
+    tags:
+      Environment: '^shared$'
+SageMakerStudioDomain:
+  exclude:
+    tags:
+      Environment: '^shared$'
+SecretsManager:
+  exclude:
+    tags:
+      Environment: '^shared$'
+SSMParameter:
+  exclude:
+    tags:
+      Environment: '^shared$'
+SecurityHub:
+  exclude:
+    tags:
+      Environment: '^shared$'
+Snapshots:
+  exclude:
+    tags:
+      Environment: '^shared$'
+TransitGateway:
+  exclude:
+    tags:
+      Environment: '^shared$'
+TransitGatewayRouteTable:
+  exclude:
+    tags:
+      Environment: '^shared$'
+TransitGatewayVPCAttachment:
+  exclude:
+    tags:
+      Environment: '^shared$'
+TransitGatewayPeeringAttachment:
+  exclude:
+    tags:
+      Environment: '^shared$'
+Route53HostedZone:
+  exclude:
+    tags:
+      Environment: '^shared$'
+Route53CIDRCollection:
+  exclude:
+    tags:
+      Environment: '^shared$'
+Route53TrafficPolicy:
+  exclude:
+    tags:
+      Environment: '^shared$'
+InternetGateway:
+  exclude:
+    tags:
+      Environment: '^shared$'
+NetworkACL:
+  exclude:
+    tags:
+      Environment: '^shared$'
+NetworkInterface:
+  exclude:
+    tags:
+      Environment: '^shared$'
+SecurityGroup:
+  exclude:
+    tags:
+      Environment: '^shared$'
+NetworkFirewall:
+  exclude:
+    tags:
+      Environment: '^shared$'
+NetworkFirewallPolicy:
+  exclude:
+    tags:
+      Environment: '^shared$'
+NetworkFirewallRuleGroup:
+  exclude:
+    tags:
+      Environment: '^shared$'
+NetworkFirewallTLSConfig:
+  exclude:
+    tags:
+      Environment: '^shared$'
+NetworkFirewallResourcePolicy:
+  exclude:
+    tags:
+      Environment: '^shared$'
+VPCLatticeServiceNetwork:
+  exclude:
+    tags:
+      Environment: '^shared$'
+VPCLatticeService:
+  exclude:
+    tags:
+      Environment: '^shared$'
+VPCLatticeTargetGroup:
+  exclude:
+    tags:
+      Environment: '^shared$'
+RouteTable:
+  exclude:
+    tags:
+      Environment: '^shared$'
+VPCPeeringConnection:
+  exclude:
+    tags:
+      Environment: '^shared$'

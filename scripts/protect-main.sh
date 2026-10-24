@@ -31,7 +31,8 @@ branch_json() {
        {type: "pull_request", parameters: {
          required_approving_review_count: 1, dismiss_stale_reviews_on_push: true,
          require_code_owner_review: false, require_last_push_approval: false,
-         required_review_thread_resolution: true}}]
+         required_review_thread_resolution: true,
+         allowed_merge_methods: ["squash"]}}]
        + (if $checks then [{type: "required_status_checks", parameters: {
            strict_required_status_checks_policy: true,
            required_status_checks: [
@@ -65,7 +66,14 @@ apply() { # repo name json
 for repo in "${repos[@]}"; do
   repo=${repo#"$ORG/"}
   # Repos without a ci.yml (terraform-platform, terraform-workflows) get no status-check rule.
-  if gh api "repos/$ORG/$repo/contents/.github/workflows/ci.yml" --silent 2>/dev/null; then checks=true; else checks=false; fi
+  if out=$(gh api "repos/$ORG/$repo/contents/.github/workflows/ci.yml" --silent 2>&1); then
+    checks=true
+  elif grep -q "HTTP 404" <<<"$out"; then
+    checks=false
+  else
+    echo "error: cannot determine whether $repo has ci.yml: $out" >&2
+    exit 1
+  fi
   echo "== $repo (status checks: $checks)"
   apply "$repo" main-protection "$(branch_json "$checks")"
   if [ "$repo" = "terraform-workflows" ]; then
