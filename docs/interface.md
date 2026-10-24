@@ -10,7 +10,7 @@ Variables are declared in `variables.tf` in this order:
 2. `context` - the shared naming and tagging object (below).
 3. `project_id` - Google modules only: it comes first after `context`.
 4. Module-specific variables, grouped by concern, required ones first.
-5. `tags` (AWS, Cloudflare) or `labels` (Google) - caller-supplied extras merged over the context-derived set.
+5. `tags` (AWS, Cloudflare) or `labels` (Google) - caller-supplied tags, typically `module.naming.tags` / `module.naming.labels`; they win over `context.extra_tags`.
 
 ## The `context` object
 
@@ -39,11 +39,27 @@ variable "context" {
 | `labels`      | the same keys lowercased snake_case; values lowercased with `[^a-z0-9_-]` replaced by `-`, truncated to 63 characters |
 | `name_prefix` | `name` truncated to 32 characters |
 
-Modules call `terraform-null-naming` internally; callers pass `context` through unchanged.
+Callers render `module "naming"` from `terraform-null-naming` and pass `tags = module.naming.tags` (AWS) or `labels = module.naming.labels` (GCP). Every module applies `merge(normalised(context.extra_tags), var.tags|labels)`, so caller `tags`/`labels` win and `extra_tags` is the shared baseline. Google modules normalise `extra_tags` keys and values to label syntax (lowercase, `[^a-z0-9_-]` replaced by `-`, 63 characters) and apply `labels` verbatim.
+
+```hcl
+module "naming" {
+  source  = "git::https://github.com/Olensys/terraform-null-naming.git?ref=v1.0.0"
+  context = var.context
+}
+
+module "bucket" {
+  source  = "git::https://github.com/Olensys/terraform-aws-s3-bucket.git?ref=v1.1.0"
+  name    = "assets"
+  context = var.context
+  tags    = module.naming.tags # GCP modules: labels = module.naming.labels
+}
+```
 
 ## Toggle naming
 
 Boolean switches that enable optional resources are named `create_<thing>` (for example `create_log_group`). Switches that turn a behaviour on use `enable_<feature>` (for example `enable_versioning`). Never use negative names such as `disable_*`. Toggles default to the secure option.
+
+Known deviations kept until 2.0: `versioning_enabled` (s3-bucket, gcs-bucket), `auth_enabled`, `transit_encryption` (memorystore-redis), `adaptive_protection` (cloud-armor), `http_redirect` (https-lb), `spa_fallback` (static-site).
 
 ## Output contract
 
@@ -52,6 +68,8 @@ Every module exposes:
 - `id` - the primary identifier of the main resource.
 - `name` - the rendered resource name.
 - `arn` (AWS) or `self_link` (Google) - the canonical reference. Cloudflare and `null` modules omit it.
+
+`terraform-cloudflare-dns` has no `name`, `tags` or `arn` (records are not taggable); `terraform-null-naming` has no `id` (it creates nothing).
 
 Additional outputs are named after the resource they expose (`role_arn`, `log_group_name`). Outputs for sensitive values are marked `sensitive = true`.
 

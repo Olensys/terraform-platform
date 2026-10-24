@@ -52,8 +52,9 @@
 
 - Every module starts as `experimental`.
 - A module is promoted to `stable` after two green nightly `integration` runs.
-- release-please owns releases after 1.0.1.
-- The 1.0.1 fleet release was cut manually because the org currently blocks Actions from opening pull requests.
+- release-please owns releases after 1.0.1. It now runs in manifest mode, honouring each repo's `release-please-config.json` and `.release-please-manifest.json`, and will take over once the org setting below is enabled.
+- Releases to date were cut manually (tags and GitHub Releases) because the org currently blocks Actions from opening pull requests.
+- (Historical) the 1.0.1 fleet release was cut manually because the org currently blocks Actions from opening pull requests.
 
 ## Owner checklist
 

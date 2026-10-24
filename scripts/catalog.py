@@ -30,9 +30,12 @@ def parse_catalog(path):
         if not m:
             continue
         entry = {}
-        for part in m.group(1).split(","):
+        for part in re.split(r",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", m.group(1)):
             k, _, v = part.partition(":")
-            entry[k.strip()] = v.strip()
+            v = v.strip()
+            if len(v) >= 2 and v[0] == v[-1] == '"':
+                v = v[1:-1]
+            entry[k.strip()] = v
         repos.append(entry)
     return repos
 
@@ -73,21 +76,44 @@ def gh_api(endpoint, raw=False):
 
 
 def latest_tag(name):
-    status, out = gh_api(f"repos/{ORG}/{name}/tags?per_page=1")
+    status, out = gh_api(f"repos/{ORG}/{name}/tags?per_page=100")
     if status != "ok":
         return "-"
-    m = re.search(r'"name"\s*:\s*"([^"]+)"', out)
-    return m.group(1) if m else "-"
+    names = re.findall(r'"name"\s*:\s*"([^"]+)"', out)
+    best, best_key = None, None
+    for n in names:
+        m = re.fullmatch(r"v?(\d+)\.(\d+)\.(\d+)", n)
+        if m and (best_key is None or tuple(map(int, m.groups())) > best_key):
+            best, best_key = n, tuple(map(int, m.groups()))
+    return best or (names[0] if names else "-")
+
+
+def fallback_row(repo):
+    """Repos without usable metadata.yaml: cloud/description come from catalog.yaml."""
+    name = repo["name"]
+    return [
+        f"[`{name}`](https://github.com/{ORG}/{name})",
+        repo["cloud"],
+        repo["tier"],
+        "n/a",
+        repo.get("description", "").replace("|", "\\|"),
+        "",
+        latest_tag(name),
+    ]
 
 
 def row_for(repo):
     name = repo["name"]
     status, text = gh_api(f"repos/{ORG}/{name}/contents/metadata.yaml", raw=True)
+    if status == "missing" and repo.get("description"):
+        return fallback_row(repo)
     if status == "missing":
         repo_status, _ = gh_api(f"repos/{ORG}/{name}")
         maturity = "planned" if repo_status == "missing" else "unknown"
         return [f"`{name}`", repo["cloud"], repo["tier"], maturity, "", "", "-"]
     md = parse_metadata(text)
+    if any("__CLOUD__" in str(v) or "__DESCRIPTION__" in str(v) for v in md.values()):
+        return fallback_row(repo)
     pairs = md.get("pairs_with")
     return [
         f"[`{name}`](https://github.com/{ORG}/{name})",

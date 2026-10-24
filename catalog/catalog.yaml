@@ -1,9 +1,9 @@
 # Source of truth for which repos belong to the library.
-# Schema: repos: [{ name, cloud: aws|google|common, tier: platform|primitive|capability|blueprint, phase: 0|1|2|3 }]
+# Schema: repos: [{ name, cloud: aws|google|common, tier: platform|primitive|capability|blueprint, phase: 0|1|2|3, description?: quoted text (only for repos without usable metadata.yaml) }]
 repos:
   - { name: terraform-platform, cloud: common, tier: platform, phase: 0 }
-  - { name: terraform-workflows, cloud: common, tier: platform, phase: 0 }
-  - { name: terraform-module-template, cloud: common, tier: platform, phase: 0 }
+  - { name: terraform-workflows, cloud: common, tier: platform, phase: 0, description: "Reusable GitHub Actions workflows: module-ci, module-release, module-integration" }
+  - { name: terraform-module-template, cloud: common, tier: platform, phase: 0, description: "Template repository every module repo is created from" }
   - { name: terraform-null-naming, cloud: common, tier: capability, phase: 0 }
   - { name: terraform-cloudflare-dns, cloud: common, tier: capability, phase: 0 }
   - { name: terraform-aws-s3-bucket, cloud: aws, tier: capability, phase: 0 }
