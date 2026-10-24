@@ -19,6 +19,7 @@ Catalog, conventions and tooling for the Olensys Terraform/OpenTofu module libra
 | `scripts/consumers.sh [module]` | Find consumers of a module under `$WORKSPACE` (default `$HOME/workspace`) |
 | `scripts/catalog.py --write\|--check` | Regenerate or verify the table below |
 | `scripts/sweeper/` | Weekly leaked-resource sweeper; dry-run by default on manual dispatch. A local dry run against the test project is the owner's job once credentials exist: `bash scripts/sweeper/gcp-sweep.sh <project> true` |
+| `scripts/protect-main.sh [--dry-run] [repo...]` | Apply the `main-protection` and `release-tags` rulesets to every `Olensys/terraform-*` repo (idempotent; run after adding a repo) |
 
 ## Setup
 
