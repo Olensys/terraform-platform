@@ -1,19 +1,17 @@
 #!/usr/bin/env bash
 # Apply branch and tag rulesets to Olensys terraform-* repositories.
-# Usage: protect-main.sh [--dry-run] [--branch-only] [repo...]   (default: every Olensys/terraform-* repo)
+# Usage: protect-main.sh [--dry-run] [repo...]   (default: every Olensys/terraform-* repo)
 set -euo pipefail
 
 ORG="Olensys"
 ACTIONS_APP_ID=15368
 dry_run=false
-branch_only=false
 repos=()
 
 for arg in "$@"; do
   case "$arg" in
     --dry-run) dry_run=true ;;
-    --branch-only) branch_only=true ;;
-    -h|--help) echo "usage: $0 [--dry-run] [--branch-only] [repo...]"; exit 0 ;;
+    -h|--help) echo "usage: $0 [--dry-run] [repo...]"; exit 0 ;;
     *) repos+=("$arg") ;;
   esac
 done
@@ -27,7 +25,7 @@ branch_json() {
   jq -n --argjson checks "$with_checks" --argjson app "$ACTIONS_APP_ID" '
     {name: "main-protection", target: "branch", enforcement: "active",
      conditions: {ref_name: {include: ["~DEFAULT_BRANCH"], exclude: []}},
-     bypass_actors: [{actor_id: 1, actor_type: "OrganizationAdmin", bypass_mode: "always"}],
+     bypass_actors: [{actor_id: 1, actor_type: "OrganizationAdmin", bypass_mode: "pull_request"}],
      rules: ([
        {type: "deletion"}, {type: "non_fast_forward"}, {type: "required_linear_history"},
        {type: "pull_request", parameters: {
@@ -46,10 +44,9 @@ tag_json() {
   jq -n '
     {name: "release-tags", target: "tag", enforcement: "active",
      conditions: {ref_name: {include: ["refs/tags/v*"], exclude: []}},
-     # GitHub rejects the Actions app (15368) as a bypass actor, so only org admins can bypass:
-     # tag creation by the release workflow then needs RELEASE_PLEASE_TOKEN from an org admin.
+     # No creation rule: release-please creates tags with github.token; existing tags cannot be moved or deleted.
      bypass_actors: [{actor_id: 1, actor_type: "OrganizationAdmin", bypass_mode: "always"}],
-     rules: [{type: "creation"}, {type: "update"}, {type: "deletion"}, {type: "non_fast_forward"}]}'
+     rules: [{type: "update"}, {type: "deletion"}, {type: "non_fast_forward"}]}'
 }
 
 apply() { # repo name json
@@ -71,9 +68,7 @@ for repo in "${repos[@]}"; do
   if gh api "repos/$ORG/$repo/contents/.github/workflows/ci.yml" --silent 2>/dev/null; then checks=true; else checks=false; fi
   echo "== $repo (status checks: $checks)"
   apply "$repo" main-protection "$(branch_json "$checks")"
-  if $branch_only; then
-    echo "skipped tag ruleset (--branch-only)"
-  elif [ "$repo" = "terraform-workflows" ]; then
+  if [ "$repo" = "terraform-workflows" ]; then
     echo "skipped tag ruleset"
   else
     apply "$repo" release-tags "$(tag_json)"
