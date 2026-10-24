@@ -10,7 +10,7 @@ Variables are declared in `variables.tf` in this order:
 2. `context` - the shared naming and tagging object (below).
 3. `project_id` - Google modules only: it comes first after `context`.
 4. Module-specific variables, grouped by concern, required ones first.
-5. `tags` (AWS, Cloudflare) or `labels` (Google) - caller-supplied tags, typically `module.naming.tags` / `module.naming.labels`; they win over `context.extra_tags`.
+5. `tags` (AWS) or `labels` (Google; `terraform-cloudflare-dns` has neither) - caller-supplied tags, typically `module.naming.tags` / `module.naming.labels`; they win over `context.extra_tags`.
 
 ## The `context` object
 
@@ -39,11 +39,11 @@ variable "context" {
 | `labels`      | the same keys lowercased snake_case; values lowercased with `[^a-z0-9_-]` replaced by `-`, truncated to 63 characters |
 | `name_prefix` | `name` truncated to 32 characters |
 
-Callers render `module "naming"` from `terraform-null-naming` and pass `tags = module.naming.tags` (AWS) or `labels = module.naming.labels` (GCP). Every module applies `merge(normalised(context.extra_tags), var.tags|labels)`, so caller `tags`/`labels` win and `extra_tags` is the shared baseline. Google modules normalise `extra_tags` keys and values to label syntax (lowercase, `[^a-z0-9_-]` replaced by `-`, 63 characters) and apply `labels` verbatim.
+Callers render `module "naming"` from `terraform-null-naming` and pass `tags = module.naming.tags` (AWS) or `labels = module.naming.labels` (GCP). Every module merges `context.extra_tags` under the caller's `tags`/`labels`, so caller `tags`/`labels` win and `extra_tags` is the shared baseline. Only Google modules normalise `extra_tags` keys and values to label syntax (lowercase, `[^a-z0-9_-]` replaced by `-`, 63 characters) and apply `labels` verbatim; AWS modules merge `extra_tags` verbatim under `tags`.
 
 ```hcl
 module "naming" {
-  source  = "git::https://github.com/Olensys/terraform-null-naming.git?ref=v1.0.0"
+  source  = "git::https://github.com/Olensys/terraform-null-naming.git?ref=v1.0.1"
   context = var.context
 }
 
