@@ -7,11 +7,21 @@
 #
 # A resource matches when it carries the label environment=test or its name starts
 # with "olensys-test-". Resource types are processed in dependency order.
+#
+# Age threshold: only compute resources (creationTimestamp<-P6H) and sql instances
+# (createTime<-P6H) are filtered by age. The other types (GKE, redis, run, functions,
+# buckets, artifacts, secrets, sinks, service accounts) have no usable age filter, so a
+# non-dry run can delete resources of an in-flight apply; run those only when no
+# integration job is running. Kept resources use environment=shared and never match.
 set -euo pipefail
 
 PROJECT="${1:?usage: gcp-sweep.sh PROJECT_ID DRY}"
 DRY="${2:?usage: gcp-sweep.sh PROJECT_ID DRY}"
 CI_SA="${GCP_SERVICE_ACCOUNT:?GCP_SERVICE_ACCOUNT must be set to the CI service account email}"
+case "$CI_SA" in
+  *"@${PROJECT}.iam.gserviceaccount.com") ;;
+  *) echo "refusing to run: service account '$CI_SA' does not belong to project '$PROJECT'" >&2; exit 1 ;;
+esac
 
 gcloud config set project "$PROJECT" >/dev/null 2>&1
 active="$(gcloud config get-value project 2>/dev/null)"
@@ -23,6 +33,7 @@ fi
 # Labelled or prefixed. Resources whose name is a full resource path use PATH_FILTER.
 FILTER='labels.environment=test OR name~^olensys-test-'
 PATH_FILTER='labels.environment=test OR name~/olensys-test-'
+AGE='creationTimestamp<-P6H'
 FAILED=0
 
 del() {
@@ -41,7 +52,8 @@ sweep() {
   local label=$1 filter=$2 fields=$3 handler=$4
   shift 4
   local rows n=0 a b c
-  rows="$("$@" --project "$PROJECT" --filter="$filter" --format="csv[no-heading]($fields)")"
+  rows="$("$@" --project "$PROJECT" --filter="$filter" --format="csv[no-heading]($fields)")" ||
+    { echo "$label: list failed" >&2; FAILED=$((FAILED + 1)); return 0; }
   while IFS=, read -r a b c; do
     [ -n "$a" ] || continue
     n=$((n + 1))
@@ -104,26 +116,26 @@ h_networks() { compute_delete networks "$1" "" ""; }
 CF='name,zone,region'
 
 sweep "container clusters" "$FILTER" "name,location" h_gke gcloud container clusters list
-sweep "sql instances" "$FILTER" "name" h_sql gcloud sql instances list
+sweep "sql instances" "($FILTER) AND createTime<-P6H" "name" h_sql gcloud sql instances list
 sweep "redis clusters" "$PATH_FILTER" "name" h_redis gcloud redis clusters list --region=-
 sweep "run services" "metadata.labels.environment=test OR metadata.name~^olensys-test-" \
   "metadata.name,metadata.labels.'cloud.googleapis.com/location'" h_run gcloud run services list
 sweep "functions" "$PATH_FILTER" "name" h_function gcloud functions list --v2
-sweep "compute forwarding-rules" "$FILTER" "$CF" h_forwarding_rules gcloud compute forwarding-rules list
-sweep "compute target-https-proxies" "$FILTER" "$CF" h_https_proxies gcloud compute target-https-proxies list
-sweep "compute target-http-proxies" "$FILTER" "$CF" h_http_proxies gcloud compute target-http-proxies list
-sweep "compute url-maps" "$FILTER" "$CF" h_url_maps gcloud compute url-maps list
-sweep "compute backend-services" "$FILTER" "$CF" h_backend_services gcloud compute backend-services list
-sweep "compute backend-buckets" "$FILTER" "$CF" h_backend_buckets gcloud compute backend-buckets list
-sweep "compute ssl-certificates" "$FILTER" "$CF" h_ssl_certs gcloud compute ssl-certificates list
-sweep "compute network-endpoint-groups" "$FILTER" "$CF" h_negs gcloud compute network-endpoint-groups list
-sweep "compute security-policies" "$FILTER" "$CF" h_security_policies gcloud compute security-policies list
-sweep "compute instances" "$FILTER" "$CF" h_instances gcloud compute instances list
-sweep "compute addresses" "$FILTER" "$CF" h_addresses gcloud compute addresses list
-sweep "compute routers" "$FILTER" "$CF" h_routers gcloud compute routers list
-sweep "compute firewall-rules" "$FILTER" "$CF" h_firewalls gcloud compute firewall-rules list
-sweep "compute networks subnets" "$FILTER" "$CF" h_subnets gcloud compute networks subnets list
-sweep "compute networks" "$FILTER" "$CF" h_networks gcloud compute networks list
+sweep "compute forwarding-rules" "($FILTER) AND $AGE" "$CF" h_forwarding_rules gcloud compute forwarding-rules list
+sweep "compute target-https-proxies" "($FILTER) AND $AGE" "$CF" h_https_proxies gcloud compute target-https-proxies list
+sweep "compute target-http-proxies" "($FILTER) AND $AGE" "$CF" h_http_proxies gcloud compute target-http-proxies list
+sweep "compute url-maps" "($FILTER) AND $AGE" "$CF" h_url_maps gcloud compute url-maps list
+sweep "compute backend-services" "($FILTER) AND $AGE" "$CF" h_backend_services gcloud compute backend-services list
+sweep "compute backend-buckets" "($FILTER) AND $AGE" "$CF" h_backend_buckets gcloud compute backend-buckets list
+sweep "compute ssl-certificates" "($FILTER) AND $AGE" "$CF" h_ssl_certs gcloud compute ssl-certificates list
+sweep "compute network-endpoint-groups" "($FILTER) AND $AGE" "$CF" h_negs gcloud compute network-endpoint-groups list
+sweep "compute security-policies" "($FILTER) AND $AGE" "$CF" h_security_policies gcloud compute security-policies list
+sweep "compute instances" "($FILTER) AND $AGE" "$CF" h_instances gcloud compute instances list
+sweep "compute addresses" "($FILTER) AND $AGE" "$CF" h_addresses gcloud compute addresses list
+sweep "compute routers" "($FILTER) AND $AGE" "$CF" h_routers gcloud compute routers list
+sweep "compute firewall-rules" "($FILTER) AND $AGE" "$CF" h_firewalls gcloud compute firewall-rules list
+sweep "compute networks subnets" "($FILTER) AND $AGE" "$CF" h_subnets gcloud compute networks subnets list
+sweep "compute networks" "($FILTER) AND $AGE" "$CF" h_networks gcloud compute networks list
 sweep "storage buckets" "$FILTER" "name" h_bucket gcloud storage buckets list
 sweep "artifacts repositories" "$PATH_FILTER" "name" h_artifact gcloud artifacts repositories list
 sweep "secrets" "$PATH_FILTER" "name" h_secret gcloud secrets list
@@ -131,6 +143,6 @@ sweep "logging sinks" "$FILTER" "name" h_sink gcloud logging sinks list
 sweep "iam service-accounts" "email~^olensys-test- AND NOT email=$CI_SA" "email" h_sa gcloud iam service-accounts list
 
 if [ "$FAILED" -gt 0 ]; then
-  echo "$FAILED deletion(s) failed" >&2
+  echo "$FAILED failure(s) (deletions or list calls)" >&2
   exit 1
 fi

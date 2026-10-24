@@ -37,7 +37,7 @@ jobs:
           DRY: "${{ github.event_name == 'schedule' && 'false' || inputs.dry_run }}"
           AWS_REGION_NAME: "${{ secrets.AWS_REGION }}"
         run: |
-          regions=(--region "$AWS_REGION_NAME")
+          regions=(--region "$AWS_REGION_NAME" --region global)
           [ "$AWS_REGION_NAME" = us-east-1 ] || regions+=(--region us-east-1)
           flags=("${regions[@]}" --config scripts/sweeper/aws-cloud-nuke.yaml --older-than 6h --force)
           if [ "$DRY" = "true" ]; then cloud-nuke aws "${flags[@]}" --dry-run; else cloud-nuke aws "${flags[@]}"; fi
