@@ -41,6 +41,7 @@ deprecated: null | { removal: YYYY-MM-DD, replacement: <repo> }
 - Commits follow Conventional Commits: `feat:`, `fix:`, `docs:`, `chore:`, with `!` or a `BREAKING CHANGE:` footer for breaking changes.
 - Releases use release-please: conventional commits drive the version bump and a release PR; merging it creates the `vX.Y.Z` tag and GitHub release.
 - Consumers pin by tag: `source = "git::https://github.com/Olensys/<module>.git?ref=vX.Y.Z"`.
+- release-please copies only the commit subject into CHANGELOG.md and the GitHub Release. A PR that changes behaviour must add its `### Behaviour changes` text to CHANGELOG.md under the next version heading itself (release-please keeps hand-written sections), and the PR body repeats it.
 
 ## Integration cadence and maturity
 
