@@ -5,9 +5,12 @@ Work that is agreed but not started. One line of context per item; details live 
 ## Follow-ups from the promotion wave
 
 - Cloudflare DNS records created by examples have no sweeper handle; a `comment = "olensys-test"` on every example record plus a weekly sweep via the API would close that gap.
-- The shared integration workflow exports every `TF_VAR_*` org/repo variable to every run; `terraform test` parses the value of an undeclared variable as HCL, so dotted values (domains) must stay repo-scoped. Skipping variables the example does not declare would remove that constraint.
-- `CLOUDFLARE_API_TOKEN` is visible to all repos; narrowing it to the five repos that use it (`--visibility selected`) is an owner item.
+- The shared integration workflow exports every `TF_VAR_*` org/repo variable to every run. `terraform test` parses the value of a variable the configuration does not declare as an HCL expression: a value that parses as an expression with references (a dotted hostname, or something like `vpc-0123`, which parses as a subtraction) fails the run, while values that do not parse at all (a hex zone id) fall back to strings. Variables with such values must stay repo-scoped until the export step skips variables the example does not declare.
+- `CLOUDFLARE_API_TOKEN` is visible to all repos; narrowing it to the four repos that use it (terraform-cloudflare-dns, terraform-aws-acm-certificate, terraform-aws-static-site, terraform-aws-alb) (`--visibility selected`) is an owner item. The test host names live under a test subdomain inside the production Cloudflare zone (the subdomain is not a delegated zone), and the token can edit that whole zone, which is why narrowing its repository visibility matters.
 - terraform-google-https-lb example: the Cloud Run service has no `roles/run.invoker` binding, so the load balancer answers 403 at runtime; the apply/destroy gate is unaffected.
+- `aws_acm_certificate_validation` has no `timeouts { create = ... }` in the static-site and alb examples or in the acm-certificate module; the provider default is 75 minutes while the integration job limit is 60, so a stalled validation kills the runner before `terraform test` destroys, leaving a free Cloudflare record and a pending certificate. Set `create = "20m"`.
+- terraform-aws-http-api example: the Lambda log group `/aws/lambda/olensys-test-httpapi-fn` outlives destroy; cloud-nuke collects it weekly, but the example could create the log group itself.
+- terraform-aws-acm-certificate: raise the example's cloudflare provider floor from `>= 5.0` to a release without the early v5 `cloudflare_dns_record` drift bugs; fix the minimal example comment (there is no `for_each`), the ttl 60 vs module output 300 mismatch, and the apex_wildcard variable description and test comment wording ("delegated", "Requires ... defaults to").
 
 ## Release automation
 

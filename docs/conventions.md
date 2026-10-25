@@ -45,13 +45,13 @@ deprecated: null | { removal: YYYY-MM-DD, replacement: <repo> }
 
 ## Examples
 
-Examples may use raw provider resources for prerequisites they cannot otherwise satisfy (validation records, certificates, a Lambda or Cloud Run service); they never call other library modules except terraform-null-naming. Every example resource name starts with `olensys-test-` so the sweepers can find it.
+Examples may use raw provider resources for prerequisites they cannot otherwise satisfy (validation records, certificates, a Lambda or Cloud Run service); they never call other library modules except terraform-null-naming. Every named example resource starts with `olensys-test-` so the sweepers can find it; DNS records are the known exception (see BACKLOG.md).
 
 ## Integration cadence and maturity
 
 - Integration applies run on push to `main` that touches Terraform files, weekly on Sunday 03:00 UTC, and on manual dispatch.
 - The weekly leaked-resource sweeper runs on Sundays at 06:00 UTC (see `scripts/sweeper/`).
-- Maturity promotion: `stable` after two green integration runs on `main` plus one green weekly sweep.
+- Maturity promotion: `stable` after two green integration runs on `main` plus one green weekly sweep. A green `sweeper.yml` dispatch with `dry_run=true` after the second apply counts as that sweep; cite its run id in the promotion PR.
 
 ## Deprecation policy
 
