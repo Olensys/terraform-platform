@@ -2,20 +2,12 @@
 
 Work that is agreed but not started. One line of context per item; details live in the linked docs.
 
-## Promote the remaining experimental modules
+## Follow-ups from the promotion wave
 
-Six modules are `experimental` only because their integration apply needs an input the test accounts do not have. Everything else about them (code, unit tests, CI) is green.
-
-| Module | Needs | Unblocked by |
-|---|---|---|
-| terraform-aws-acm-certificate | DNS validation of a certificate | a test subdomain with DNS we control |
-| terraform-aws-static-site | `certificate_arn`, `domain_names` | the ACM certificate above |
-| terraform-aws-alb | `certificate_arn` | the ACM certificate above |
-| terraform-google-https-lb | `domain`, `service_name` | the subdomain plus a Cloud Run service in the test project |
-| terraform-aws-http-api | `lambda_arn` | a Lambda in the test account, or let the example create one |
-| terraform-cloudflare-dns | a zone and an API token | the subdomain delegated to Cloudflare, token stored as an org secret |
-
-Plan: delegate one throwaway subdomain to Cloudflare, store `CLOUDFLARE_API_TOKEN` and `TF_VAR_zone_id` at org level, validate the ACM example through Cloudflare, reuse the certificate for ALB and static-site, point the HTTPS load balancer at a record in that subdomain, make the HTTP API example create its own Lambda. Two green runs each, then one-line promotion PRs.
+- Cloudflare DNS records created by examples have no sweeper handle; a `comment = "olensys-test"` on every example record plus a weekly sweep via the API would close that gap.
+- The shared integration workflow exports every `TF_VAR_*` org/repo variable to every run; `terraform test` parses the value of an undeclared variable as HCL, so dotted values (domains) must stay repo-scoped. Skipping variables the example does not declare would remove that constraint.
+- `CLOUDFLARE_API_TOKEN` is visible to all repos; narrowing it to the five repos that use it (`--visibility selected`) is an owner item.
+- terraform-google-https-lb example: the Cloud Run service has no `roles/run.invoker` binding, so the load balancer answers 403 at runtime; the apply/destroy gate is unaffected.
 
 ## Release automation
 

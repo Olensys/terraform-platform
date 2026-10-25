@@ -43,6 +43,10 @@ deprecated: null | { removal: YYYY-MM-DD, replacement: <repo> }
 - Consumers pin by tag: `source = "git::https://github.com/Olensys/<module>.git?ref=vX.Y.Z"`.
 - release-please copies only the commit subject into CHANGELOG.md and the GitHub Release. A PR that changes behaviour must add its `### Behaviour changes` text to CHANGELOG.md under the next version heading itself (release-please keeps hand-written sections), and the PR body repeats it.
 
+## Examples
+
+Examples may use raw provider resources for prerequisites they cannot otherwise satisfy (validation records, certificates, a Lambda or Cloud Run service); they never call other library modules except terraform-null-naming. Every example resource name starts with `olensys-test-` so the sweepers can find it.
+
 ## Integration cadence and maturity
 
 - Integration applies run on push to `main` that touches Terraform files, weekly on Sunday 03:00 UTC, and on manual dispatch.
