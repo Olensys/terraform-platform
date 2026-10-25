@@ -39,6 +39,12 @@ Add `owner_id` and `repository_id` inputs to the two GitHub identity modules so 
 
 The budget and alerts exist; the stop-billing function that detaches billing at 100 percent is not deployed. Deploy it if a hard cap is wanted (see docs/runbooks/test-accounts.md A.1 step 5).
 
+## Follow-ups from the section 1 fix wave (2026-10-25)
+
+- Upgrade order for consumers: terraform-cloudflare-dns ≥ 1.1.0 before terraform-aws-ses-domain ≥ 1.1.0 (the MX record now carries `priority`, which older cloudflare-dns rejects as an unknown attribute).
+- terraform-aws-acm-certificate: `validation_records` is keyed by record names that are known only after the certificate exists, so a fresh deploy that feeds it into terraform-cloudflare-dns needs a two-step apply (`-target=module.cert` first). A redesign keyed by something known at plan time would remove that step.
+- terraform-cloudflare-dns: SRV records need weight, port and target (the provider's `data` block), which the module does not expose; only MX priority is usable today.
+
 ## Blueprints and rich examples
 
 Compose the modules into opinionated, end-to-end blueprints (one per typical workload per cloud) and add `examples/complete` to the modules that only have `examples/minimal`. Starts with a design conversation; nothing decided yet.
