@@ -68,3 +68,7 @@ All repositories in this library are public and Apache-2.0 licensed. The nightly
 | [`terraform-google-identity-platform`](https://github.com/Olensys/terraform-google-identity-platform) | google | capability | stable | Identity Platform project configuration with sign-in providers, authorized domains, MFA state and blocking functions | `terraform-aws-cognito-user-pool` | v1.1.2 |
 | [`terraform-google-bastion-host`](https://github.com/Olensys/terraform-google-bastion-host) | google | capability | stable | Bastion VM with no external IP, IAP-only SSH, OS Login and shielded VM, for named members |  | v1.1.2 |
 <!-- END_CATALOG -->
+
+## Backlog
+
+See [BACKLOG.md](BACKLOG.md) for agreed work that has not started.
