@@ -75,7 +75,7 @@ Additional outputs are named after the resource they expose (`role_arn`, `log_gr
 
 ## Wrapper ceiling
 
-A module that wraps an upstream registry module exposes at most **15 inputs** beyond `name`, `context` and `tags`/`labels`. Anything beyond that is either hard-wired to an opinionated default or the caller is pointed at the upstream module directly (see [use upstream directly](conventions.md#use-upstream-directly)).
+A module that wraps an upstream registry module exposes about **15 inputs** beyond `name`, `context` and `tags`/`labels`. Plain pass-through inputs that consumers need to adopt the module may take it past that, noted in the PR; anything else beyond the guideline is either hard-wired to an opinionated default or the caller is pointed at the upstream module directly (see [use upstream directly](conventions.md#use-upstream-directly)).
 
 ## Secure defaults
 
