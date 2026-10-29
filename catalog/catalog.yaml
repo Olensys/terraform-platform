@@ -22,6 +22,7 @@ repos:
   - { name: terraform-aws-ses-domain, cloud: aws, tier: capability, phase: 2 }
   - { name: terraform-aws-step-function, cloud: aws, tier: capability, phase: 3 }
   - { name: terraform-aws-http-api, cloud: aws, tier: capability, phase: 3 }
+  - { name: terraform-aws-subnet, cloud: aws, tier: primitive, phase: 3 }
   - { name: terraform-google-network, cloud: google, tier: capability, phase: 1 }
   - { name: terraform-google-gke-cluster, cloud: google, tier: capability, phase: 1 }
   - { name: terraform-google-service-account, cloud: google, tier: capability, phase: 1 }
