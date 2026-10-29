@@ -7,6 +7,7 @@ Capabilities that exist on both clouds, and the repo that provides each. "upstre
 | Naming, tags, labels | `terraform-null-naming` | `terraform-null-naming` |
 | DNS records | `terraform-cloudflare-dns` | `terraform-cloudflare-dns` |
 | Network | `terraform-aws-vpc` | `terraform-google-network` |
+| Subnet in an existing network | `terraform-aws-subnet` | subnets inside `terraform-google-network` |
 | Container platform | `terraform-aws-ecs-cluster` | `terraform-google-gke-cluster` |
 | Container service | `terraform-aws-ecs-service` | `terraform-google-cloud-run-service` |
 | Functions | `terraform-aws-lambda-function` | `terraform-google-cloud-function` |
