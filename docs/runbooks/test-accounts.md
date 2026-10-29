@@ -65,14 +65,14 @@
    ```
    Put it in an OU with an SCP that denies `organizations:LeaveOrganization` and restricts regions to `us-east-1` and the `AWS_REGION` you will use.
 2. **OIDC role** — assume `OrganizationAccountAccessRole` into the new account and apply the library module:
-   The module binds exact `owner/repo` subjects (no wildcards, by design); list the 16 AWS module repos plus `terraform-platform` (sweeper), `branches = ["main"]`.
+   The module binds exact `owner/repo` subjects (no wildcards, by design); list the 17 AWS module repos plus `terraform-platform` (sweeper), `branches = ["main"]`.
    ```hcl
    locals {
      context   = { organization = "olensys", environment = "shared", application = "ci", owner = "platform", cost_center = "eng" }
      aws_repos = ["terraform-aws-s3-bucket", "terraform-aws-ecs-cluster", "terraform-aws-ecs-service", "terraform-aws-lambda-function",
        "terraform-aws-ssm-parameters", "terraform-aws-ecr-repository", "terraform-aws-sqs-queue", "terraform-aws-acm-certificate",
        "terraform-aws-static-site", "terraform-aws-alb", "terraform-aws-vpc", "terraform-aws-github-oidc-role",
-       "terraform-aws-cognito-user-pool", "terraform-aws-ses-domain", "terraform-aws-step-function", "terraform-aws-http-api",
+       "terraform-aws-cognito-user-pool", "terraform-aws-ses-domain", "terraform-aws-step-function", "terraform-aws-http-api", "terraform-aws-subnet",
        "terraform-platform"]
    }
    module "naming" { source = "git::https://github.com/Olensys/terraform-null-naming.git?ref=v1.0.1"; context = local.context }
