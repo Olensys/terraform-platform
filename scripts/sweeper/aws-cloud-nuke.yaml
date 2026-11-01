@@ -1,40 +1,58 @@
 # cloud-nuke configuration for the weekly sweeper (.github/workflows/sweeper.yml).
 #
-# The AWS account behind SWEEPER_AWS_ACCOUNT_ID is dedicated to integration tests, so
-# anything older than --older-than is swept EXCEPT the long-lived infrastructure the
-# integration tests depend on. Kept, and why:
-#   - Everything tagged Environment=shared (exact key casing; the value is matched
-#     case-insensitively against ^shared$). The shared VPC, ECS cluster and ACM
-#     certificate are created with context environment = "shared", which yields that
-#     tag and names starting olensys-shared-. Applied to every resource type below.
-#   - Names matching ^olensys-shared- for VPC, ECSCluster, ACM, S3, CloudFront and IAM.
-#   - IAM roles: github-integration (the CI OIDC role),
-#     OrganizationAccountAccessRole (the owner's admin path into the account),
-#     AWSBudgetsActionsRole* (the budget hard-stop) and AWSServiceRole* (service-linked).
-#   - The GitHub OIDC identity provider (token.actions.githubusercontent.com).
-#   - The Terraform state bucket olensys-tf-test-state (S3).
-# Test resources carry environment = "test" / the olensys-test- prefix and are swept.
-# Filter syntax verified against cloud-nuke v0.53.0 config/config.go (exclude.names_regex,
-# exclude.tags). Types that do not expose tags simply ignore the tag filter.
+# ALLOWLIST: a resource is deleted only if it carries the tag Environment=test (the value is
+# matched case-insensitively against ^test$). Every module example sets context
+# environment = "test", so every taggable resource it creates gets that tag through
+# terraform-null-naming. Anything without the tag is left alone, whatever its name: the
+# sandbox account behind SWEEPER_AWS_ACCOUNT_ID also hosts the olensys.com dev environment
+# (os-dev-*, /os/dev/*, os-shared-network) and the long-lived integration fixtures
+# (Environment=shared, olensys-shared-*), and the 2026-11-01 sweep showed that an
+# exclude-only config cannot be kept complete by hand.
+#
+# How cloud-nuke v0.53.0 evaluates this (config/config.go, ResourceType.ShouldInclude):
+#   - include.tags: the tag key must exist and its lowercased value must match. A resource
+#     without the key is skipped. A resource type whose lister does not report tags passes
+#     nil and is skipped "for safety", so such types are never swept by this config and
+#     leaks of those types must be removed by hand.
+#   - exclude.* is evaluated before include.* and still wins, so the second guard below
+#     stays: Environment=shared, names ^olensys-shared-, the CI role github-integration,
+#     OrganizationAccountAccessRole, AWSBudgetsActionsRole*, AWSServiceRole*, the GitHub
+#     OIDC provider and the state bucket olensys-tf-test-state.
+#   - include.names_regex is ANDed with include.tags, so it is deliberately not used here:
+#     most identifiers are ids (vpc-…, subnet-…), not names.
+#   - --older-than 6h on the command line keeps resources younger than 6h out of the sweep.
+# Keep this file and docs/runbooks/test-accounts.md section A.2 in agreement.
 VPC:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     names_regex:
       - '^olensys-shared-'
     tags:
       Environment: '^shared$'
 ECSCluster:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     names_regex:
       - '^olensys-shared-'
     tags:
       Environment: '^shared$'
 ACM:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     names_regex:
       - '^olensys-shared-'
     tags:
       Environment: '^shared$'
 S3:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     names_regex:
       - '^olensys-shared-'
@@ -42,12 +60,18 @@ S3:
     tags:
       Environment: '^shared$'
 CloudFrontDistribution:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     names_regex:
       - '^olensys-shared-'
     tags:
       Environment: '^shared$'
 IAMRoles:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     names_regex:
       - '^olensys-shared-'
@@ -58,510 +82,925 @@ IAMRoles:
     tags:
       Environment: '^shared$'
 IAMServiceLinkedRoles:
+  # lister reports no tags in v0.53.0: a tag include would skip everything, so match the
+  # olensys-test- name prefix that every example resource carries instead.
+  include:
+    names_regex:
+      - '^olensys-test-'
   exclude:
     names_regex:
       - '^AWSServiceRole'
 OIDCProvider:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     names_regex:
       - 'token\.actions\.githubusercontent\.com'
 ACMPCA:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 AMI:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 APIGateway:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 APIGatewayV2:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 AccessAnalyzer:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 AutoScalingGroup:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 AppRunnerService:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 BackupPlan:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 BackupVault:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 ManagedPrometheus:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 CloudWatchAlarm:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 CloudWatchDashboard:
+  # lister reports no tags in v0.53.0: a tag include would skip everything, so match the
+  # olensys-test- name prefix that every example resource carries instead.
+  include:
+    names_regex:
+      - '^olensys-test-'
   exclude:
     tags:
       Environment: '^shared$'
 CloudWatchLogGroup:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 CloudMapNamespace:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 CloudMapService:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 CloudTrailTrail:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 CloudFormationStack:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 CodeDeployApplications:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 ConfigServiceRecorder:
+  # lister reports no tags in v0.53.0: a tag include would skip everything, so match the
+  # olensys-test- name prefix that every example resource carries instead.
+  include:
+    names_regex:
+      - '^olensys-test-'
   exclude:
     tags:
       Environment: '^shared$'
 ConfigServiceRule:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 DataPipeline:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 DataSyncLocation:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 DataSyncTask:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 DBGlobalClusters:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 DBClusters:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 DBInstances:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 DBGlobalClusterMemberships:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 DBSubnetGroups:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 DynamoDB:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 EBSVolume:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 ElasticBeanstalk:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 EC2:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 EC2DedicatedHosts:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 EC2DHCPOption:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 EC2KeyPairs:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 EC2IPAM:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 EC2IPAMByoasn:
+  # lister reports no tags in v0.53.0: a tag include would skip everything, so match the
+  # olensys-test- name prefix that every example resource carries instead.
+  include:
+    names_regex:
+      - '^olensys-test-'
   exclude:
     tags:
       Environment: '^shared$'
 EC2IPAMCustomAllocation:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 EC2IPAMPool:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 EC2IPAMResourceDiscovery:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 EC2IPAMScope:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 EC2Endpoint:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 EC2Subnet:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 EC2PlacementGroups:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 EgressOnlyInternetGateway:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 ECRRepository:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 ECSService:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 EKSCluster:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 ELBv1:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 ELBv2:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 ElasticFileSystem:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 ElasticIP:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 ElastiCache:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 ElastiCacheParameterGroup:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 ElastiCacheServerless:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 ElastiCacheSubnetGroup:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 EventBridge:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 EventBridgeArchive:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 EventBridgeRule:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 EventBridgeSchedule:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 EventBridgeScheduleGroup:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 Grafana:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 GuardDuty:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 IAMGroups:
+  # lister reports no tags in v0.53.0: a tag include would skip everything, so match the
+  # olensys-test- name prefix that every example resource carries instead.
+  include:
+    names_regex:
+      - '^olensys-test-'
   exclude:
     tags:
       Environment: '^shared$'
 IAMPolicies:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 IAMInstanceProfiles:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 IAMUsers:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 KMSCustomerKeys:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 KinesisStream:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 KinesisFirehose:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 LambdaFunction:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 LambdaLayer:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 LaunchConfiguration:
+  # lister reports no tags in v0.53.0: a tag include would skip everything, so match the
+  # olensys-test- name prefix that every example resource carries instead.
+  include:
+    names_regex:
+      - '^olensys-test-'
   exclude:
     tags:
       Environment: '^shared$'
 LaunchTemplate:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 MacieMember:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 MSKCluster:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 MQBroker:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 NATGateway:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 OpenSearchDomain:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 Redshift:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 RedshiftSnapshotCopyGrant:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 ResourceShare:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 RDSSnapshot:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 RDSClusterSnapshot:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 RDSParameterGroup:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 RDSProxy:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 S3AccessPoint:
+  # lister reports no tags in v0.53.0: a tag include would skip everything, so match the
+  # olensys-test- name prefix that every example resource carries instead.
+  include:
+    names_regex:
+      - '^olensys-test-'
   exclude:
     tags:
       Environment: '^shared$'
 S3ObjectLambdaAccessPoint:
+  # lister reports no tags in v0.53.0: a tag include would skip everything, so match the
+  # olensys-test- name prefix that every example resource carries instead.
+  include:
+    names_regex:
+      - '^olensys-test-'
   exclude:
     tags:
       Environment: '^shared$'
 S3MultiRegionAccessPoint:
+  # lister reports no tags in v0.53.0: a tag include would skip everything, so match the
+  # olensys-test- name prefix that every example resource carries instead.
+  include:
+    names_regex:
+      - '^olensys-test-'
   exclude:
     tags:
       Environment: '^shared$'
 SESIdentity:
+  # lister reports no tags in v0.53.0: a tag include would skip everything, so match the
+  # olensys-test- name prefix that every example resource carries instead.
+  include:
+    names_regex:
+      - '^olensys-test-'
   exclude:
     tags:
       Environment: '^shared$'
 SESConfigurationSet:
+  # lister reports no tags in v0.53.0: a tag include would skip everything, so match the
+  # olensys-test- name prefix that every example resource carries instead.
+  include:
+    names_regex:
+      - '^olensys-test-'
   exclude:
     tags:
       Environment: '^shared$'
 SESReceiptRuleSet:
+  # lister reports no tags in v0.53.0: a tag include would skip everything, so match the
+  # olensys-test- name prefix that every example resource carries instead.
+  include:
+    names_regex:
+      - '^olensys-test-'
   exclude:
     tags:
       Environment: '^shared$'
 SESReceiptFilter:
+  # lister reports no tags in v0.53.0: a tag include would skip everything, so match the
+  # olensys-test- name prefix that every example resource carries instead.
+  include:
+    names_regex:
+      - '^olensys-test-'
   exclude:
     tags:
       Environment: '^shared$'
 SESEmailTemplates:
+  # lister reports no tags in v0.53.0: a tag include would skip everything, so match the
+  # olensys-test- name prefix that every example resource carries instead.
+  include:
+    names_regex:
+      - '^olensys-test-'
   exclude:
     tags:
       Environment: '^shared$'
 SNS:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 SQS:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 SageMakerEndpoint:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 SageMakerEndpointConfig:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 SageMakerNotebook:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 SageMakerStudioDomain:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 SecretsManager:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 SSMParameter:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 SecurityHub:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 Snapshots:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 TransitGateway:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 TransitGatewayRouteTable:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 TransitGatewayVPCAttachment:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 TransitGatewayPeeringAttachment:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 Route53HostedZone:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 Route53CIDRCollection:
+  # lister reports no tags in v0.53.0: a tag include would skip everything, so match the
+  # olensys-test- name prefix that every example resource carries instead.
+  include:
+    names_regex:
+      - '^olensys-test-'
   exclude:
     tags:
       Environment: '^shared$'
 Route53TrafficPolicy:
+  # lister reports no tags in v0.53.0: a tag include would skip everything, so match the
+  # olensys-test- name prefix that every example resource carries instead.
+  include:
+    names_regex:
+      - '^olensys-test-'
   exclude:
     tags:
       Environment: '^shared$'
 InternetGateway:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 NetworkACL:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 NetworkInterface:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 SecurityGroup:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 NetworkFirewall:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 NetworkFirewallPolicy:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 NetworkFirewallRuleGroup:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 NetworkFirewallTLSConfig:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 NetworkFirewallResourcePolicy:
+  # lister reports no tags in v0.53.0: a tag include would skip everything, so match the
+  # olensys-test- name prefix that every example resource carries instead.
+  include:
+    names_regex:
+      - '^olensys-test-'
   exclude:
     tags:
       Environment: '^shared$'
 VPCLatticeServiceNetwork:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 VPCLatticeService:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 VPCLatticeTargetGroup:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 RouteTable:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
 VPCPeeringConnection:
+  include:
+    tags:
+      Environment: '^test$'
   exclude:
     tags:
       Environment: '^shared$'
