@@ -50,7 +50,7 @@ Examples may use raw provider resources for prerequisites they cannot otherwise 
 ## Integration cadence and maturity
 
 - Integration applies run on push to `main` that touches Terraform files, weekly on Sunday 03:00 UTC, and on manual dispatch.
-- The weekly leaked-resource sweeper runs on Sundays at 06:00 UTC (see `scripts/sweeper/`).
+- The weekly leaked-resource sweeper runs on Sundays at 06:00 UTC (see `scripts/sweeper/`). It deletes only resources tagged `Environment=test` or, for types without tags, named `olensys-test-*`; both come from the example's `context` and `name`, so an example that bypasses them leaks.
 - Maturity promotion: `stable` after two green integration runs on `main` plus one green weekly sweep. A green `sweeper.yml` dispatch with `dry_run=true` after the second apply counts as that sweep; cite its run id in the promotion PR.
 
 ## Deprecation policy
