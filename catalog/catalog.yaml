@@ -15,6 +15,7 @@ repos:
   - { name: terraform-aws-sqs-queue, cloud: aws, tier: capability, phase: 1 }
   - { name: terraform-aws-acm-certificate, cloud: aws, tier: capability, phase: 2 }
   - { name: terraform-aws-static-site, cloud: aws, tier: capability, phase: 2 }
+  - { name: terraform-aws-cloudfront-distribution, cloud: aws, tier: capability, phase: 2 }
   - { name: terraform-aws-alb, cloud: aws, tier: capability, phase: 2 }
   - { name: terraform-aws-vpc, cloud: aws, tier: capability, phase: 2 }
   - { name: terraform-aws-github-oidc-role, cloud: aws, tier: capability, phase: 2 }
